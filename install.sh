@@ -85,7 +85,9 @@ esac
 echo "-----> using port $NGINX_PORT"
 
 echo "-----> Moving server root into $NGINX_ROOT"
+mkdir -p $NGINX_ROOT/public
 mkdir -p $NGINX_ROOT/logs
+chmod -R 0777 $NGINX_ROOT
 #cp -r $CWD/app $CWD/cache $CWD/public $CWD/vendor $NGINX_ROOT
 
 echo "-----> Installing server config"
@@ -111,10 +113,12 @@ sudo echo "server {
         }
 
         location ~ \.php$ {
-                fastcgi_pass unix:/run/php/php7.0-fpm.sock
-                fastcgi_index index.php;
-                include fastcgi_params;
-                fastcgi_param   SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+          include snippets/fastcgi-php.conf;
+          #
+          # # With php7.0-cgi alone:
+          # fastcgi_pass 127.0.0.1:9000;
+          # # With php7.0-fpm:
+          fastcgi_pass unix:/run/php/php7.0-fpm.sock;
         }
 
 
