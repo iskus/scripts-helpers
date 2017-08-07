@@ -12,12 +12,15 @@ set -e
 #   exit 1
 # fi
 #PROJECT_NAME="web"
+
+read -p "Insert username: " USER_NAME
 read -p "Insert project name: " PROJECT_NAME
 
-read -p "Insert environment name [dev/test/prod]: " ENV
+read -p "Insert environment name [Loc/dev/test/prod]: " ENV
 if [ "$ENV" != "dev" ] && [ "$ENV" != "test" ] && [ "$ENV" != "prod" ]; then
-  echo "must set ENV to either 'dev', 'test' or 'prod'"
-  exit 1
+  #echo "must set ENV to either 'dev', 'test' or 'prod'"
+  #exit 1
+  ENV="loc"
 fi
 
 CWD="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -46,19 +49,19 @@ echo "environment: $ENV"
 
 
 #nginx section
-read -p "Enter the nginx root path for this project. [/var/www/$PROJECT_NAME]:" PROMPT
+read -p "Enter the nginx root path for this project. [/home/$USER_NAME/www/$PROJECT_NAME]:" PROMPT
 case $PROMPT in
     "")
-        NGINX_ROOT="/var/www/$PROJECT_NAME"
+        NGINX_ROOT="/home/$USER_NAME/www/$PROJECT_NAME"
         ;;
     *)
         NGINX_ROOT=$PROMPT
         ;;
 esac
-read -p "Enter the nginx server name for this project. [$PROJECT_NAME.$ENV.loc]:" PROMPT
+read -p "Enter the nginx server name for this project. [$PROJECT_NAME.$ENV]:" PROMPT
 case $PROMPT in
     "")
-        NGINX_HOSTNAME="$PROJECT_NAME.$ENV.loc"
+        NGINX_HOSTNAME="$PROJECT_NAME.$ENV"
         ;;
     *)
         NGINX_HOSTNAME=$PROMPT
@@ -104,11 +107,11 @@ sudo echo "server {
         try_files \$uri \$uri/ @rewrite;
 
         location @rewrite {
-            rewrite ^/(.*)$ /index.php?_url=/\$1;
+            rewrite ^/(.*)$ /index.php?q=/\$1;
         }
 
         location ~ \.php$ {
-                fastcgi_pass unix:/var/run/php5-fpm.sock;
+                fastcgi_pass unix:/run/php/php7.0-fpm.sock
                 fastcgi_index index.php;
                 include fastcgi_params;
                 fastcgi_param   SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
