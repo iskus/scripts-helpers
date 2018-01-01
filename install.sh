@@ -88,6 +88,10 @@ echo "-----> Moving server root into $NGINX_ROOT"
 mkdir -p $NGINX_ROOT/public
 mkdir -p $NGINX_ROOT/logs
 chmod -R 0777 $NGINX_ROOT
+echo "<?php
+            echo 'НЕМА ЗА ШО!<br/>';
+            phpinfo();" > $NGINX_ROOT/public/index.php
+
 #cp -r $CWD/app $CWD/cache $CWD/public $CWD/vendor $NGINX_ROOT
 
 echo "-----> Installing server config"
@@ -138,3 +142,5 @@ echo "-----> Restarting nginx "
 sudo service nginx restart
 
 echo "We're done"
+
+echo "http://$NGINX_HOSTNAME Открывай, должен работать по идее!"
