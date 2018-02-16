@@ -12,10 +12,29 @@ set -e
 #   exit 1
 # fi
 #PROJECT_NAME="web"
+projectName() {
+    if [ $1 == '' ] 
+        then
+        read -p "Insert project name: " PROJECT_NAME
+        projectName $PROJECT_NAME
+        PROJECT_NAME=$STR
+    fi
+}
+# read -p "Insert username: [$SUDO_USER]" USER_NAME
+# if [ $USER_NAME == '' ] 
+#     then
+    USER_NAME=$SUDO_USER
+# fi
+# echo $USER_NAME
+# echo $LOGNAME
+# echo $SUDO_USER
+# exit
 
-read -p "Insert username: " USER_NAME
 read -p "Insert project name: " PROJECT_NAME
-
+if [ $PROJECT_NAME == '' ] 
+    then
+    read -p "Insert project name: " PROJECT_NAME
+fi
 read -p "Insert environment name [Loc/dev/test/prod]: " ENV
 if [ "$ENV" != "dev" ] && [ "$ENV" != "test" ] && [ "$ENV" != "prod" ]; then
   #echo "must set ENV to either 'dev', 'test' or 'prod'"
@@ -95,51 +114,60 @@ echo "<?php
 #cp -r $CWD/app $CWD/cache $CWD/public $CWD/vendor $NGINX_ROOT
 
 echo "-----> Installing server config"
-sudo echo "server {
-        listen $NGINX_PORT;
-        index index.php index.html;
-        server_name $NGINX_HOSTNAME;
-        root $NGINX_ROOT/public;
+echo "
+server {
+    listen   $NGINX_PORT;
+    server_name $NGINX_HOSTNAME;
 
+    root $NGINX_ROOT/public;
+    index index.php index.html index.htm;
 
-        access_log $NGINX_ROOT/logs/access.log;
-        error_log $NGINX_ROOT/logs/error.log;
-        client_max_body_size 64m;
+    charset utf-8;
+    client_max_body_size 100M;
+    fastcgi_read_timeout 1800;
 
-        charset utf-8;
+    location / {
+        try_files \$uri \$uri/ /index.php?_url=\$uri&\$args;
+    }
 
-        index index.php index.html index.htm;
+    location ~ [^/]\.php(/|\$) {
+        try_files \$uri =404;
+        fastcgi_pass  unix:/var/run/php/php7.2-fpm.sock;
+        fastcgi_index /index.php;
 
-        try_files \$uri \$uri/ @rewrite;
-
-        location @rewrite {
-            rewrite ^/(.*)$ /index.php?q=/\$1;
+        include fastcgi_params;
+        fastcgi_split_path_info ^(.+?\.php)(/.*)\$;
+        if (!-f \$document_root\$fastcgi_script_name) {
+            return 404;
         }
 
-        location ~ \.php$ {
-          include snippets/fastcgi-php.conf;
-          #
-          # # With php7.0-cgi alone:
-          # fastcgi_pass 127.0.0.1:9000;
-          # # With php7.0-fpm:
-          fastcgi_pass unix:/run/php/php7.0-fpm.sock;
-        }
+        fastcgi_param PATH_INFO       \$fastcgi_path_info;
+        # fastcgi_param PATH_TRANSLATED \$document_root\$fastcgi_path_info;
+        # and set php.ini cgi.fix_pathinfo=0
 
+        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+    }
 
-        location ~ /\.ht {
-                deny  all;
-        }
+    location ~ /\.ht {
+        deny all;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico)\$ {
+        expires       max;
+        log_not_found off;
+        access_log    off;
+    }
 }
 " > $NGINX_CONFIG_DIR/sites-available/$PROJECT_NAME
 
-sudo ln -s -f $NGINX_CONFIG_DIR/sites-available/$PROJECT_NAME $NGINX_CONFIG_DIR/sites-enabled/$PROJECT_NAME
-sudo chown -R www-data:www-data $NGINX_ROOT
+ln -s -f $NGINX_CONFIG_DIR/sites-available/$PROJECT_NAME $NGINX_CONFIG_DIR/sites-enabled/$PROJECT_NAME
+chown -R www-data:www-data $NGINX_ROOT
 
 echo "127.0.0.1     $NGINX_HOSTNAME" >> /etc/hosts
 
 echo "-----> Restarting nginx "
 
-sudo service nginx restart
+service nginx restart
 
 echo "We're done"
 
