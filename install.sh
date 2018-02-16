@@ -122,6 +122,9 @@ server {
     root $NGINX_ROOT/public;
     index index.php index.html index.htm;
 
+    access_log $NGINX_ROOT/logs/access.log;
+    error_log $NGINX_ROOT/logs/error.log;
+
     charset utf-8;
     client_max_body_size 100M;
     fastcgi_read_timeout 1800;
