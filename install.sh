@@ -171,6 +171,7 @@ echo "127.0.0.1     $NGINX_HOSTNAME" >> /etc/hosts
 echo "-----> Restarting nginx "
 
 service nginx restart
+service php7.2-fpm start
 
 echo "We're done"
 
