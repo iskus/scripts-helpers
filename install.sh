@@ -30,6 +30,12 @@ projectName() {
 # echo $SUDO_USER
 # exit
 
+read -p "Insert php version[[7.0]/7.1/7.2]: " PHP_VERSION
+if [ $PHP_VERSION == '' ] 
+    then
+    PHP_VERSION='7.0'
+fi
+
 read -p "Insert project name: " PROJECT_NAME
 if [ $PROJECT_NAME == '' ] 
     then
@@ -171,7 +177,7 @@ echo "127.0.0.1     $NGINX_HOSTNAME" >> /etc/hosts
 echo "-----> Restarting nginx "
 
 service nginx restart
-service php7.2-fpm start
+service php$PHP_VERSION-fpm start
 
 echo "We're done"
 
