@@ -30,27 +30,27 @@ projectName() {
 # echo $SUDO_USER
 # exit
 
-read -p "Insert php version[[7.0]/7.1/7.2]: " PHP_VERSION
-if [ $PHP_VERSION == '' ] 
-    then
-    PHP_VERSION='7.0'
-fi
+# read -p "Insert php version[[7.0]/7.1/7.2/7.3]: " PHP_VERSION
+# if [ $PHP_VERSION == '' ] 
+#     then
+    PHP_VERSION='7.3'
+# fi
 
 read -p "Insert project name: " PROJECT_NAME
 if [ $PROJECT_NAME == '' ] 
     then
     read -p "Insert project name: " PROJECT_NAME
 fi
-read -p "Insert environment name [Loc/dev/test/prod]: " ENV
-if [ "$ENV" != "dev" ] && [ "$ENV" != "test" ] && [ "$ENV" != "prod" ]; then
+# read -p "Insert environment name [Loc/dev/test/prod]: " ENV
+# if [ "$ENV" != "dev" ] && [ "$ENV" != "test" ] && [ "$ENV" != "prod" ]; then
   #echo "must set ENV to either 'dev', 'test' or 'prod'"
   #exit 1
   ENV="loc"
-fi
+# fi
 
 CWD="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 NGINX_CONFIG_DIR="/etc/nginx"
-echo "environment: $ENV"
+# echo "environment: $ENV"
 
 #config file section
 #echo "-----> copying $ENV config file"
@@ -94,27 +94,25 @@ case $PROMPT in
 esac
 echo "-----> using $NGINX_HOSTNAME"
 
-read -p "Enter the nginx port for this project. [80]:" PROMPT
-case $PROMPT in
-    "")
+# read -p "Enter the nginx port for this project. [80]:" PROMPT
+# case $PROMPT in
+    # "")
         NGINX_PORT="80"
-        ;;
-    [0-9])
-        NGINX_PORT=$PROMPT
-        ;;
-    *)
-        echo 'invalid port; using default'
-        NGINX_PORT="80"
-        ;;
-esac
-echo "-----> using port $NGINX_PORT"
+        # ;;
+    # [0-9])
+        # NGINX_PORT=$PROMPT
+        # ;;
+    # *)
+        # echo 'invalid port; using default'
+        # NGINX_PORT="80"
+        # ;;
+# esac
+# echo "-----> using port $NGINX_PORT"
 
 echo "-----> Moving server root into $NGINX_ROOT"
 mkdir -p $NGINX_ROOT/public
 mkdir -p $NGINX_ROOT/logs
-chmod -R 0777 $NGINX_ROOT
 echo "<?php
-            echo 'НЕМА ЗА ШО!<br/>';
             phpinfo();" > $NGINX_ROOT/public/index.php
 
 #cp -r $CWD/app $CWD/cache $CWD/public $CWD/vendor $NGINX_ROOT
@@ -141,7 +139,7 @@ server {
 
     location ~ [^/]\.php(/|\$) {
         try_files \$uri =404;
-        fastcgi_pass  unix:/var/run/php/php7.2-fpm.sock;
+        fastcgi_pass  unix:/var/run/php/php$PHP_VERSION-fpm.sock;
         fastcgi_index /index.php;
 
         include fastcgi_params;
@@ -172,6 +170,8 @@ server {
 ln -s -f $NGINX_CONFIG_DIR/sites-available/$PROJECT_NAME $NGINX_CONFIG_DIR/sites-enabled/$PROJECT_NAME
 chown -R www-data:www-data $NGINX_ROOT
 
+chmod -R 0777 $NGINX_ROOT
+
 echo "127.0.0.1     $NGINX_HOSTNAME" >> /etc/hosts
 
 echo "-----> Restarting nginx "
@@ -179,6 +179,8 @@ echo "-----> Restarting nginx "
 service nginx restart
 service php$PHP_VERSION-fpm start
 
-echo "We're done"
+echo -en "${GREEN}Done!"
 
-echo "http://$NGINX_HOSTNAME Открывай, должен работать по идее!"
+echo -en "${BOLD}http://$NGINX_HOSTNAME"
+
+firefox http://$NGINX_HOSTNAME
